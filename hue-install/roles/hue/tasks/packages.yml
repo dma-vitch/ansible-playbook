@@ -1,0 +1,53 @@
+---
+- name: create hue dir
+  file:
+    path: '{{ PATH_HUE }}'
+    state: directory
+    mode: 0755
+    owner: '{{ HUE_USER }}'
+
+- name: download hue
+  unarchive:
+    extra_opts: ['--strip-components=1']
+    src: '{{ URL_HUE }}'
+    dest: '{{ PATH_HUE }}'
+    owner: hue
+    remote_src: True
+
+- name: install required packages
+  yum:
+#    update_cache: yes
+    name: '{{ item }}'
+    state: present
+    disable_gpg_check: yes
+  with_items:
+   - make
+   - ant
+   - gcc
+   - gcc-c++
+   - asciidoc
+   - krb5-devel
+   - openssl-devel
+   - cyrus-sasl-devel
+   - cyrus-sasl-gssapi
+   - cyrus-sasl-plain
+   - libtidy
+   - libffi-devel
+   - libxml2-devel
+   - libxslt-devel
+   - sqlite-devel
+   - openssl-devel
+   - openldap-devel
+   - mysql-devel
+   - maven
+   - python-devel
+   - python-setuptools
+   - gmp-devel
+#   - rsync
+#   - python-pip
+
+- name: make apps hue
+  shell: make apps
+  args:
+    chdir: /opt/hue/
+    creates: build/env/bin/hue

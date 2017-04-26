@@ -1,0 +1,6 @@
+---
+- user:
+    name: '{{ HUE_USER }}'
+    shell: /bin/bash
+#    groups: admins,developers
+#    append: yes

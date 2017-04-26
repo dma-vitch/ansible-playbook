@@ -1,0 +1,52 @@
+---
+- name: generate hue_secret_key from /dev/urandom
+  shell: dd if=/dev/urandom count=1024 | sha512sum | awk '{ print $1}'
+  register: hue_secret_key
+
+- name: Set config for hue
+  template:
+    src: 'config/hue.ini.j2'
+    dest: '{{ PATH_HUE }}/desktop/conf/hue.ini'
+    owner: '{{ HUE_USER }}'
+#  notify: restart hue
+
+- name: ensure hue database exists
+  mysql_db:
+    name: '{{ HUE_DB_NAME }}'
+    state: present
+    login_user: '{{ MYSQLUSER }}'
+    login_password: '{{ MYSQLPWD }}'
+    login_host: '{{ HUE_DB_HOST }}'
+  register: createdb
+
+- name: create hue user@%
+  mysql_user:
+    name: '{{ HUE_DB_USER }}'
+    host: '{{ item }}'
+    password: '{{ HUE_DB_PWD }}'
+    check_implicit_admin: yes
+    priv: '{{ HUE_DB_NAME }}.*:ALL'
+    login_user: '{{ MYSQLUSER }}'
+    login_password: '{{ MYSQLPWD }}'
+    login_host: '{{HUE_DB_HOST }}'
+  with_items:
+    - "localhost"
+    - '{{ ansible_default_ipv4.address }}'
+    - '{{ ansible_hostname }}'
+    - '{{ ansible_fqdn }}'
+
+- name: run hue syncdb to populate MySQL tables
+  become: yes
+  become_user: '{{ HUE_USER }}'
+  command: '{{ PATH_HUE }}/build/env/bin/python {{ PATH_HUE }}/build/env/bin/hue syncdb --noinput'
+
+- name: run hue migrate to populate MySQL tables
+  become: yes
+  become_user: '{{ HUE_USER }}'
+  command: '{{ PATH_HUE }}/build/env/bin/python {{ PATH_HUE }}/build/env/bin/hue migrate'
+
+- name: Set running file
+  template:
+    src: 'hue.j2'
+    dest: '/etc/init.d/hue'
+    mode: 0755

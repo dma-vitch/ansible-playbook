@@ -1,0 +1,11 @@
+---
+- name: enable service hue
+  systemd:
+    name: hue
+    enabled: yes
+    masked: no
+
+- name: started service hue
+  systemd:
+    state: started
+    name: hue

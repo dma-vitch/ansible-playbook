@@ -1,0 +1,26 @@
+---
+# VERSION OPTS
+HUE_VERSION: 3.12.0
+
+# URLS
+URL_HUE: "https://dl.dropboxusercontent.com/u/730827/hue/releases/{{ HUE_VERSION }}/hue-{{ HUE_VERSION }}.tgz"
+
+# PATHS
+PATH_HUE: /opt/hue
+
+# HUE setting
+HUE_BIND_ADRESS: 0.0.0.0
+HUE_PORT: 8888
+HUE_USER: hue
+HUE_GROUP: hue
+HUE_APP_BLACKLIST: pig,oozie,jobsub,impala,security,spark,sqoop,search
+HUE_DB_HOST: localhost
+HUE_DB_PORT: 3306
+HUE_DB_NAME: hue
+
+
+# CREDENTIALS
+MYSQLUSER: root
+MYSQLPWD: MariadbAdmin
+HUE_DB_USER: hue
+HUE_DB_PWD: zFe5YJk!a

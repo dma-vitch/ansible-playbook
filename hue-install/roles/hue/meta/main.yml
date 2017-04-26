@@ -1,0 +1,37 @@
+---
+galaxy_info:
+  author: Ilya Shataev
+  description: 
+  company:
+  license: license (MIT)
+  min_ansible_version: 2.1
+  #
+  # Below are all platforms currently available. Just uncomment
+  # the ones that apply to your role. If you don't see your 
+  # platform on this list, let us know and we'll get it added!
+  #
+  platforms:
+  - name: EL
+    versions:
+  #  - 6
+    - 7
+  #
+  # Below are all categories currently available. Just as with
+  # the platforms above, uncomment those that apply to your role.
+  #
+  #categories:
+  #- cloud
+  #- cloud:ec2
+  #- cloud:gce
+  #- cloud:rax
+  #- clustering
+  #- database
+  #- database:nosql
+  #- database:sql
+  #- development
+  #- monitoring
+  #- networking
+  #- packaging
+  #- system
+  #- web
+dependencies:
