@@ -9,3 +9,8 @@
     state: restarted
     daemon_reload: yes
     name: hue
+
+- name: restart firewalld
+  systemd:
+    state: restarted
+    name: fiewalld

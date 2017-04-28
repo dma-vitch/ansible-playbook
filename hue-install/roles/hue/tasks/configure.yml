@@ -50,3 +50,12 @@
     src: 'hue.j2'
     dest: '/etc/init.d/hue'
     mode: 0755
+
+- name: Open port {{HUE_PORT}} on firewall
+  firewalld:
+    port: '{{ item }}'
+    permanent: true
+    state: enabled
+  notify: restart firewalld
+  with_items:
+   - '{{HUE_PORT}}/tcp'
