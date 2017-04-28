@@ -47,6 +47,8 @@
 #   - python-pip
 
 - name: make apps hue
+  become: yes
+  become_user: '{{ HUE_USER }}
   shell: make apps
   args:
     chdir: /opt/hue/
