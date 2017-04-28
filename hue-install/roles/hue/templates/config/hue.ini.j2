@@ -18,7 +18,6 @@
 
   # Set this to a random string, the longer the better.
   # This is used for secure hashing in the session store.
-#  secret_key='{{ HUE_SECRET_KEY }}'
   secret_key={{hue_secret_key.stdout}}
   # Execute this script to produce the Django secret key. This will be used when
   # 'secret_key' is not set.
