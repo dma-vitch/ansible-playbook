@@ -1,0 +1,11 @@
+---
+# This playbook deploys the hue server.
+
+- name: apply common configuration to all nodes
+  hosts: 127.0.0.1
+  remote_user: sudo
+  become: yes
+  become_method: sudo
+
+  roles:
+    - kafka-manager

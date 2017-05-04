@@ -1,0 +1,33 @@
+---
+
+#- name: Check if kafka_manager build local file is already configured.
+#  stat:
+#    path: "{{ KAFKA_MANAGER_BUILD_FILE_PATH }}"
+#  connection: local
+#  register: kafka_manager_build_file_result
+
+- name: create kafka-manager dir
+  file:
+    path: '{{ KAFKA_MANAGER_PATH }}'
+    state: directory
+    mode: 0755
+    owner: '{{ KAFKA_MANAGER_USER }}'
+    group: '{{ KAFKA_MANAGER_GROUP }}'
+
+- name: copy kafka-manager build file
+  copy:
+    src: 'kafka-manager-1.3.3.6.zip'
+    dest: "{{ KAFKA_MANAGER_BUILD_FILE_PATH }}"
+
+- name: extract kafka-manager
+  unarchive:
+    src: "{{ KAFKA_MANAGER_BUILD_FILE_PATH }}"
+    dest: "{{ KAFKA_MANAGER_PATH }}"
+    owner: "{{ KAFKA_MANAGER_USER }}"
+    group: "{{ KAFKA_MANAGER_GROUP }}"
+    remote_src: True
+
+- name: remove kafka-manager build file
+  file:
+    path: "{{ KAFKA_MANAGER_BUILD_FILE_PATH }}"
+    state: absent

@@ -1,0 +1,50 @@
+---
+
+- name: create kafka-manager dir soft link
+  file:
+    src: "{{ KAFKA_MANAGER_PATH }}/kafka-manager-{{ KAFKA_MANAGER_VERSION }}"
+    dest: "{{ KAFKA_MANAGER_PATH }}/current"
+    owner: "{{ KAFKA_MANAGER_USER }}"
+    group: "{{ KAFKA_MANAGER_GROUP }}"
+    state: link
+
+- name: set kafka-manager home directory user is [{{ KAFKA_MANAGER_USER }}]
+  file:
+    dest: "{{ KAFKA_MANAGER_PATH }}/kafka-manager-{{ KAFKA_MANAGER_VERSION }}"
+    owner: "{{ KAFKA_MANAGER_USER }}"
+    group: "{{ KAFKA_MANAGER_GROUP }}"
+    recurse: yes
+
+- name: generate kafka_manager_secret_key from /dev/urandom
+  shell: dd if=/dev/urandom count=1024 | sha512sum | awk '{ print $1}'
+  register: kafka_manager_secret_key
+
+- name: set kafka-manager config file.
+  template:
+    src: application.conf.j2
+    dest: "{{ KAFKA_MANAGER_PATH }}/current/conf/application.conf"
+    owner: "{{ KAFKA_MANAGER_USER }}"
+    group: "{{ KAFKA_MANAGER_GROUP }}"
+
+- name: set kafka-manager runing file.
+  template:
+    src: application.ini.j2
+    dest: "{{ KAFKA_MANAGER_PATH }}/current/conf/application.ini"
+    owner: "{{ KAFKA_MANAGER_USER }}"
+    group: "{{ KAFKA_MANAGER_GROUP }}"
+
+- name: set kafka-manager init.d script
+  template:
+    src: 'kafka-manager.j2'
+    dest: '/etc/init.d/kafka-manager'
+    mode: 0755
+    owner: root
+
+#- name: configure | Add kafka-manager env to /etc/profile.
+#  lineinfile: "dest=/etc/profile  line='export PATH={{ software_install_path }}/kafka-manager/bin:$PATH'"
+
+- name: ensure kafka-manager is started and enabled on boot.
+  service:
+    name: kafka-manager
+    state: started
+    enabled: yes

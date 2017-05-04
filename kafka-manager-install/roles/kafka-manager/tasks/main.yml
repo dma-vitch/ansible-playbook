@@ -1,0 +1,7 @@
+---
+
+- include: user.yml
+- include: package.yml
+- include: configure.yml
+#TODO builds or copy stage
+#- include: builds.yml

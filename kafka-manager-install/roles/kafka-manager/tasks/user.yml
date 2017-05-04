@@ -1,0 +1,12 @@
+---
+
+- name: Create {{ KAFKA_MANAGER_GROUP }} group.
+  group:
+    name: "{{ KAFKA_MANAGER_GROUP }}"
+
+- name: Create {{ KAFKA_MANAGER_USER }} user.
+  user:
+    name: "{{ KAFKA_MANAGER_USER }}"
+    group: "{{ KAFKA_MANAGER_GROUP }}"
+    shell: /sbin/nologin
+    createhome: no
