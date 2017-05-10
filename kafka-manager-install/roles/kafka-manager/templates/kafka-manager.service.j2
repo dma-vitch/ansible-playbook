@@ -1,0 +1,17 @@
+[Unit]
+Description=Kafka Manager tools for Apache Kafka
+After=network.target
+
+[Service]
+User={{ KAFKA_MANAGER_USER }}
+Group={{ KAFKA_MANAGER_GROUP }}
+Type=simple
+PIDFile={{ KAFKA_MANAGER_PATH }}/current/kafka-manager.pid
+WorkingDirectory={{ KAFKA_MANAGER_PATH }}/current
+ExecStart={{ KAFKA_MANAGER_PATH }}/current/bin/kafka-manager -Dconfig.file={{ KAFKA_MANAGER_PATH }}/current/conf/application.conf -java-home JAVA_HOME="{{ ansible_env.JAVA_HOME |d(KAFKA_MANAGER_JAVAHOME)}}" \
+-J-Xms128M -J-Xmx512m -J-server {% if KAFKA_MANAGER_HTTPS_ENABLED %} -Dhttp.port=disabled -Dhttps.port=$PORT {% else %} -Dhttp.port={{ KAFKA_MANAGER_PORT }} {% endif %}
+ExecStop=kill $MAINPID
+ExecStopPost=rm -f {{ KAFKA_MANAGER_PATH }}/current/kafka-manager.pid
+
+[Install]
+WantedBy=multi-user.target
