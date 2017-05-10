@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
 # kafka-manager This starts and stops kafka-manager
 #
-# description: This starts the Linux Auditing System Daemon, \
-#              which collects security related events in a dedicated \
-#              audit log. If this daemon is turned off, audit events \
-#              will be sent to syslog.
+# config: {{ KAFKA_MANAGER_PATH }}/current/conf/application.conf
+# pidfile: {{ KAFKA_MANAGER_PATH }}/current/kafka-manager.pid
 #
 ### BEGIN INIT INFO
 # Provides:          kafka-manager
@@ -12,8 +10,9 @@
 # Required-Stop:     $network
 # Default-Start:     2 3 4
 # Default-Stop:      0 1 6
-# Description:       kafka-manager
+# Description:       A tool for managing Apache Kafka.
 # Short-Description: Enable kafka-manager service provided by kafka-manager
+
 
 DAEMON_NAME=kafka-manager
 DAEMON_PATH={{ KAFKA_MANAGER_PATH }}/current/bin
