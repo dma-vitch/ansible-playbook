@@ -1,0 +1,16 @@
+[Unit]
+Description=Zookeeper View tools for Apache Zookeeper
+After=network.target
+
+[Service]
+User={{ ZOOKEEPER_UI_USER }}
+Group={{ ZOOKEEPER_UI_GROUP }}
+Type=simple
+PIDFile={{ ZOOKEEPER_UI_PATH }}/zookeeper-ui.pid
+WorkingDirectory={{ ZOOKEEPER_UI_PATH }}
+ExecStart="{{ ansible_env.JAVA_HOME |d(ZOOKEEPER_UI_JAVAHOME) }}/bin/java -jar zkui-2.2-jar-with-dependencies.jar"
+ExecStop=/usr/bin/kill $MAINPID
+ExecStopPost=/usr/bin/rm -f {{ ZOOKEEPER_UI_PATH }}/zookeeper-ui.pid
+
+[Install]
+WantedBy=multi-user.target

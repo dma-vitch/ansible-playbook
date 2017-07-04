@@ -1,0 +1,38 @@
+---
+
+- name: set config file
+  template:
+    src: 'config.cfg.j2'
+    dest: "{{ ZOOKEEPER_UI_PATH }}/config.cfg"
+    mode: 0755
+    owner: "{{ ZOOKEEPER_UI_USER }}"
+
+- name: set zookeeper ui init.d script
+  template:
+    src: 'zookeeperui.j2'
+    dest: '/etc/init.d/zookeeper-ui'
+    mode: 0755
+    owner: root
+  when: ansible_os_family == "RedHat" and ansible_distribution_major_version|int < 7
+
+- name: set zookeeper ui systemd script
+  template:
+    src: 'zookeeper-ui.service.j2'
+    dest: '/etc/systemd/system/zookeeper-ui.service'
+  when: ansible_os_family == "RedHat" and ansible_distribution_major_version|int >= 7
+
+- name: ensure zookeeper ui is started and enabled on boot by service.
+  service:
+    name: zookeeper-ui
+    state: started
+    enabled: yes
+  when: ansible_os_family == "RedHat" and ansible_distribution_major_version|int < 7
+
+- name: ensure zookeeper ui is started and enabled on boot by systemd.
+  systemd:
+    name: zookeeper-ui
+    state: started
+    enabled: yes
+  when: ansible_os_family == "RedHat" and ansible_distribution_major_version|int >= 7
+
+#TODO firewall rules

@@ -1,0 +1,28 @@
+---
+
+- name: create zookeeper ui dir
+  file:
+    path: "{{ ZOOKEEPER_UI_PATH }}"
+    state: directory
+    mode: 0755
+    owner: "{{ ZOOKEEPER_UI_USER }}"
+    group: "{{ ZOOKEEPER_UI_GROUP }}"
+
+- name: copy zookeeper ui file
+  copy:
+    src: 'zkui-2.2-SNAPSHOT-jar-with-dependencies.jar'
+    dest: "{{ ZOOKEEPER_UI_PATH }}"
+
+#TODO download and build automate
+#- name: download zookeper ui
+#  unarchive:
+#    src: "{{ ZOOKEEPER_UI_URL }}"
+#    dest: "{{ BUILDS_FILES_PATH }}"
+#    owner: "{{ ZOOKEEPER_UI_USER }}"
+#    remote_src: True
+#  when: not zookeeper_ui_src_file_result.stat.exists
+
+#- name: remove zookeeper ui build file
+#  file:
+#    path: "{{ BUILDS_FILES_PATH }}"
+#    state: absent

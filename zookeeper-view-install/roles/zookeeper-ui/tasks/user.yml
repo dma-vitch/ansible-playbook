@@ -1,0 +1,12 @@
+---
+
+- name: Create {{ ZOOKEEPER_UI_GROUP }} group.
+  group:
+    name: "{{ ZOOKEEPER_UI_GROUP}}"
+
+- name: Create {{ ZOOKEEPER_UI_USER }} user.
+  user:
+    name: "{{ ZOOKEEPER_UI_USER }}"
+    group: "{{ ZOOKEEPER_UI_GROUP }}"
+    shell: /sbin/nologin
+    createhome: no
