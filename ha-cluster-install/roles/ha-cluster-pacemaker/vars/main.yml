@@ -1,0 +1,19 @@
+---
+
+pacemaker_resources:
+      - id: cluster-ip
+        type: "ocf:heartbeat:IPaddr2"
+        options:
+          ip: 10.0.0.1
+          cidr_netmask: 8
+        op:
+          - action: monitor
+            options:
+              interval: 20s
+      - id: cluster-srv
+        type: "systemd:named-chroot"
+        op:
+          - action: monitor
+            options:
+              interval: 5s
+        clone: true

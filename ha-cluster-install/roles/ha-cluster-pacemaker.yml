@@ -1,0 +1,10 @@
+- hosts: ftp_servers
+  remote_user: sudo
+  become: yes
+  become_method: sudo
+
+  roles:
+  - ha-cluster-pacemaker
+  vars:
+    pacemaker_properties:
+      stonith_enabled: "false"

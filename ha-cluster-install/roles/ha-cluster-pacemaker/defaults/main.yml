@@ -1,0 +1,50 @@
+---
+# use local installation media instead of configured repositories (CentOS only)
+use_local_media: false
+
+# user used for authorizing cluster nodes
+cluster_user: hacluster
+cluster_user_pass: testtest
+# group to which cluster user belongs (should be 'haclient')
+cluster_group: haclient
+
+# name of the cluster
+cluster_name: pacemaker
+
+# configuration of firewall for clustering, NOTE in RHEL/Centos 6 this replaces iptables configuration file!
+cluster_firewall: true
+
+# enable cluster on boot
+cluster_enable_service: true
+
+# configure cluster with fence_xvm fencing device ?
+# this will copy key defined by 'fence_xvm_key' to nodes and add fencing devices to cluster
+# NOTE: you need to define 'hypervisor_hostname' in the inventory for each cluster node
+cluster_configure_fence_xvm: true
+
+# location of the fence_xvm.key file
+fence_xvm_key: '/etc/cluster/fence_xvm.key'
+
+# configure cluster with fence_kdump fencing device ?
+cluster_configure_fence_kdump: false
+
+# custom fence device configuration variable which allows you to define your own fence devices
+# for proper options check examples below
+#
+#cluster_fence_config:
+#  fence_device_1:
+#    fence_type: 'fence_vmware_soap'
+#    fence_options: 'pcmk_host_map="fastvm-1:vm_name_on_hypevisor1" ipaddr="vcenter.hostname" login="root" passwd="testest" ssl="1" ssl_insecure="1" op monitor interval=30s'
+#  fence_device_2:
+#    fence_type: 'fence_xvm'
+#    fence_options: 'pcmk_host_map="fastvm-2:vm_name_n_hypervisor2" op monitor interval=30s'
+
+# (RHEL only) enable repositories(channels) containing the packages needed.
+# by default only High Availability is enabled
+enable_repos: true
+enable_eus_repos: false
+
+# (RHEL only) repos_type:
+# - ha - High Availability channel
+# - rs - Resilient Storage channel
+repos_type: 'ha'
