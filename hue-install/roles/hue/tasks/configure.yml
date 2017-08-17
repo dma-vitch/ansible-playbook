@@ -45,11 +45,21 @@
   become_user: '{{ HUE_USER }}'
   command: '{{ PATH_HUE }}/build/env/bin/python {{ PATH_HUE }}/build/env/bin/hue migrate'
 
-- name: Set running file
+- name: set hue init.d run script
   template:
     src: 'hue.j2'
     dest: '/etc/init.d/hue'
     mode: 0755
+    owner: root
+  when: ansible_os_family == "RedHat" and ansible_distribution_major_version|int < 7
+
+- name: set hue systemd run script
+  template:
+    src: 'hue.service.j2'
+    dest: '/etc/systemd/system/hue.service'
+    mode: 0755
+    owner: root
+  when: ansible_os_family == "RedHat" and ansible_distribution_major_version|int >= 7
 
 - name: Open port {{HUE_PORT}} on firewall
   firewalld:
