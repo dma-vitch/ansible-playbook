@@ -1,0 +1,17 @@
+[Unit]
+Description=Hue web server
+Documentation=http://gethue.com/
+
+[Service]
+Type=simple
+User={{ HUE_USER }}
+WorkingDirectory={{ PATH_HUE }}/
+Environment=PYTHON_EGG_CACHE=/tmp/.hue-python-eggs
+ExecStart=/usr/bin/env build/env/bin/supervisor -p {{ PATH_HUE }}/supervisor.pid -l {{ PATH_HUE }}/logs -d
+ExecStop=/usr/bin/kill $MAINPID
+KillMode=none
+KillSignal=SIGTERM
+SyslogIdentifier=hue
+
+[Install]
+WantedBy=multi-user.target
