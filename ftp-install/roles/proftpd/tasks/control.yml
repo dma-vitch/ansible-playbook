@@ -1,0 +1,37 @@
+---
+#- service: name=proftpd state=restarted
+- name: enable service httpd and ensure it is not masked
+  systemd:
+    name: httpd
+    enabled: yes
+    masked: no
+
+- name: enable service proftpd and ensure it is not masked
+  systemd:
+    name: proftpd
+    enabled: yes
+    masked: no
+
+- name: enable service mysql and ensure it is not masked
+  systemd:
+    name: mysqld
+    enabled: yes
+    masked: no
+
+#- name: restart service httpd
+#  systemd:
+#    state: restarted
+#    daemon_reload: yes
+#    name: httpd
+#
+#- name: restart service proftpd
+#  systemd:
+#    state: restarted
+#    daemon_reload: yes
+#    name: proftpd
+#
+#- name: restart service mysqld
+#  systemd:
+#    state: restarted
+#    daemon_reload: yes
+#    name: mysqld

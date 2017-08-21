@@ -1,0 +1,26 @@
+# логи в папке /var/log/proftpd/
+# access_log - лог передачи файлов по ftp
+# auth_log - лог FTP команды и статус
+# mysql_log - растет очень быстро
+# paranoid_log - все логи
+# sftp.log - sftp лог
+#  sftp.log-20170112.gz - кто это делает?
+# xferlog - что за лог, сборная солянка?
+# /var/log/proftpd/*.log /var/log/xferlog {
+
+/var/log/proftpd/*.log {
+    daily
+    # use compress for log file
+    compress
+    missingok
+    # use date as a suffix of the rotated file
+    dateext
+    notifempty
+    rotate 7
+    sharedscripts
+    # create new (empty) log files after rotating old ones
+    create
+    postrotate
+        systemctl reload proftpd.service
+    endscript
+}

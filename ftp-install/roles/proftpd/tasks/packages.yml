@@ -1,0 +1,47 @@
+---
+#- include_vars: defaults.yml
+
+- name: repo
+  yum:
+    name: '{{ EPEL_URL }}'
+    state: present
+    disable_gpg_check: yes
+
+- name: install packages  
+  yum:
+    name: '{{ item }}'
+    state: present
+    disable_gpg_check: yes
+  with_items:
+   - mysql-server
+   - proftpd-mysql
+   - httpd
+   - MySQL-python
+
+- name: create proftpd_admin_root
+  file:
+    path: '{{PATH_WWW}}/{{PATH_ADMIN_DIR}}'
+    state: directory
+    mode: 0755
+    owner: apache
+    group: apache
+
+#- name: create ftp root
+#  file: path={{PATH_FTP}}  state=directory mode=0755
+#
+#- name: download proftpdadmin
+#  get_url:
+#    url: {{URL_PROFTPD_ADM}}
+#    dest: /tmp/proftpd.tar.gz
+#    mode: 0750
+#  ignore_errors: yes
+
+- name: create proftpd_admin_root
+  unarchive:
+    extra_opts: ['--strip-components=1']
+    src: '{{ URL_PROFTPD_ADM }}'
+    dest: '{{PATH_WWW}}/{{PATH_ADMIN_DIR}}'
+    remote_src: True
+
+#- name: chmod configuration.xml
+#  file:  path={{PATH_WWW}}/{{PATH_ADMIN_DIR}}/configs/configuration.xml state=touch mode="u=rw,g=rw,o=rw"

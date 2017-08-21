@@ -1,0 +1,7 @@
+---
+# FTP server vars
+PROFTPD_SERVER_NAME: 'BSS FTP Server'
+PROFTPD_USER: 'nobody'
+PROFTPD_GROUP: 'nobody'
+
+# FTP WebUI

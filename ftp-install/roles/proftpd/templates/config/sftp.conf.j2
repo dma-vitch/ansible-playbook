@@ -1,0 +1,15 @@
+<IfModule mod_sftp.c>
+# Включаем SFTP
+SFTPEngine       on
+# Указываем порт для работы
+Port             {{PROFTPD_SFTP_PORT}}
+# Указываем лог файл
+SFTPLog          /var/log/proftpd/sftp.log
+# Configure both the RSA host keys, using the same host key
+# files that OpenSSH uses.
+SFTPHostKey       /etc/ssh/ssh_host_rsa_key
+# Указываем метод аутентификации
+SFTPAuthMethods   password
+# Включаем компресию
+SFTPCompression   delayed
+</IfModule>

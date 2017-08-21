@@ -1,0 +1,30 @@
+---
+# VERSION OPTS
+AUTH_MASTER: 10.0.2.15
+VERSION_PRODTPD: proftpd-1.3.5a.tar.gz
+VERSION_BOOT_CONFIG: /boot/config-2.6.32-504.8.1.el6.x86_64
+PROFTP_CONF_OPT: "--with-modules=mod_sql:mod_sql_mysql:mod_quotatab:mod_quotatab_sql --with-includes=/usr/include/mysql/ --with-libraries=/usr/lib64/mysql/"
+
+# URLS
+URL_PROFTPD_ADM: "https://github.com/ChristianBeer/ProFTPd-Admin/archive/v2.2.tar.gz"
+URL_PROFTPD: "ftp://ftp.proftpd.org/distrib/source"
+MYSQL_URL: "http://repo.mysql.com/mysql-community-release-el7.rpm"
+EPEL_URL: "http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-9.noarch.rpm"
+
+# PATHS
+#REPO: /root
+PATH_WWW: /var/www/html
+#PATH_FTP: /ftp/incoming
+#PATH_WWW_ROOT: /vagrant/www/html
+PATH_ADMIN_DIR: ftpadmin
+#PATH_PROFTPD: /usr/sbin/proftpd
+#PATH_FTPWHO: /usr/bin/ftpwho
+#PATH_WHO: /usr/bin/who
+
+
+# CREDENTIALS
+MYSQLPWD: proftpd
+PROFTPD_MYSQL_USER: proftpd
+PROFTPD_MYSQL_PASS: proftpd
+
+

@@ -1,0 +1,83 @@
+ServerName				  "{{ PROFTPD_SERVER_NAME }}"
+ServerType				  standalone
+ServerIdent				  on		"FTP Server ready."
+ServerAdmin         root@localhost
+DefaultServer			  on
+AccessGrantMsg		  "User %u logged in."
+DeferWelcome			  off
+# Disable support IPv6
+UseIPv6             off
+
+DefaultRoot         ~ !adm
+
+# Don't do reverse DNS lookups (hangs on DNS problems
+UseReverseDNS       off
+IdentLookups        off
+
+#Port				        21
+PassivePorts        50000 65534
+Umask				        002
+ListOptions         "-a"
+MaxInstances		    20
+MaxClientsPerHost   3       "Only %m connections per host allowed"
+MaxClients          10      "Only %m total simultanious logins allowed"
+MaxHostsPerUser     1
+MaxLoginAttempts    3
+
+# Limit login times and timeouts to drop dead clients.
+TimeoutLogin        60
+TimeoutIdle         150
+TimeoutNoTransfer   150
+TimeoutStalled      150
+
+# Set the user and group that the server runs as
+User				        "{{ PROFTPD_USER }}"
+Group				        "{{ PROFTPD_GROUP }}"
+
+ScoreboardFile 			/var/log/scoreboard
+
+# Disable sendfile by default since it breaks displaying the download speeds in
+# ftptop and ftpwho
+UseSendfile			    off
+
+# Dynamic Shared Object (DSO) loading
+<IfModule mod_dso.c>
+  LoadModule mod_sql.c
+  LoadModule mod_sql_mysql.c
+  LoadModule mod_sql_passwd.c
+  LoadModule mod_sftp.c
+</IfModule>
+
+# Some logging formats
+LogFormat            default 	"%h %l %u %t \"%r\" %s %b"
+LogFormat            auth    	"%v [%P] %h %t \"%r\" %s"
+LogFormat            write   	"%h %l %u %t \"%r\" %s %b"
+
+# Define log-files to use
+TransferLog          /var/log/proftpd.xferlog
+ExtendedLog          /var/log/proftpd.access_log    WRITE,READ write
+ExtendedLog          /var/log/proftpd.auth_log      AUTH auth
+ExtendedLog          /var/log/proftpd.paranoid_log  ALL default
+SQLLogFile			     /var/log/proftpd.mysql
+TraceLog             /var/log/prodtpd.trace.log
+
+# Set up authentication via SQL
+# ===========
+AuthOrder            mod_sql.c
+
+# Disable valid shell for users
+RequireValidShell    off
+
+<Global>
+  Umask              022
+  AllowOverwrite     yes
+  <Limit ALL SITE_CHMOD>
+    AllowAll
+  </Limit>
+</Global>
+
+# This is used for Mysql setting
+Include /etc/proftpd/sql.conf
+# This is used for SFTP connections
+Include /etc/proftpd/sftp.conf
+#Include /etc/proftpd/tls.conf

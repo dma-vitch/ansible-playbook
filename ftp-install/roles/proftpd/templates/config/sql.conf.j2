@@ -1,0 +1,35 @@
+<IfModule mod_sql.c>
+# Cообщаем, что намерены работать с СУБД MySQL
+SQLBackend mysql
+SQLEngine on
+# Пароли в базе храняться в шифрованном формате SHA1
+SQLAuthTypes            SHA1
+SQLPasswordEngine       on
+SQLAuthenticate         on
+SQLPasswordEncoding     hex
+SQLEngine               on
+# Подключаемся к БД proftpd пользователем proftpd с паролем proftpd
+SQLConnectInfo          proftpd@sorm-test-input01.ural.mts.ru proftpd Vgxw_2uP
+# Выбираем данные из таблицы users
+SQLUserInfo users userid passwd uid gid homedir shell
+# Выбираем данные из таблицы groups
+SQLGroupInfo            groups groupname gid members
+SQLUserWhereClause      "disabled != 1"
+# Create a home dir for users
+CreateHome              on 775 skel /etc/proftpd/skel dirmode 775
+# По умолчанию минимальный UserID пользователя и GroupID =999
+#SQLMinUserUID 33
+#SQLMinUserGID 33
+# Log the user logging in
+SQLLog PASS             updatecount
+SQLNamedQuery           updatecount UPDATE "login_count=login_count+1, last_login=now() WHERE userid='%u'" users
+# Used to track xfer traffic per user (without invoking a quota)
+SQLLog RETR             bytes-out-count
+SQLNamedQuery           bytes-out-count UPDATE "bytes_out_used=bytes_out_used+%b WHERE userid='%u'" users
+SQLLog RETR             files-out-count
+SQLNamedQuery           files-out-count UPDATE "files_out_used=files_out_used+1 WHERE userid='%u'" users
+SQLLog STOR             bytes-in-count
+SQLNamedQuery           bytes-in-count UPDATE "bytes_in_used=bytes_in_used+%b WHERE userid='%u'" users
+SQLLog STOR             files-in-count
+SQLNamedQuery           files-in-count UPDATE "files_in_used=files_in_used+1 WHERE userid='%u'" users
+</IfModule>

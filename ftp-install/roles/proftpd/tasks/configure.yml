@@ -1,0 +1,110 @@
+---
+- include_vars: ftps.yml
+
+- name: set Mysql schema script
+  template:
+    src: 'db_structure.sql.j2'
+    dest: '/tmp/db_structure.sql'
+
+#- name: Create Mysql schema
+#  shell: mysql  < /tmp/db_structure.sql
+#  ignore_errors: yes
+
+- name: ensure proftpd database exists
+  mysql_db:
+    name: '{{ PROFTPD_DB_NAME }}'
+    state: present
+    encoding: utf8
+    login_user: '{{ MYSQLUSER }}'
+    login_password: '{{ MYSQLPWD }}'
+    login_host: '{{ PROFTPD_DB_HOST }}'
+  register: createdb
+
+- name: create proftpd user@%
+  mysql_user:
+    name: '{{ PROFTPD_MYSQL_USER }}'
+    host: '{{ item }}'
+    password: '{{ PROFTPD_MYSQL_PASS }}'
+    check_implicit_admin: yes
+    priv: '{{ PROFTPD_DB_NAME }}.*:ALL'
+    login_user: '{{ MYSQLUSER }}'
+    login_password: '{{ MYSQLPWD }}'
+    login_host: '{{ PROFTPD_DB_HOST }}'
+  with_items:
+    - "localhost"
+    - '{{ ansible_default_ipv4.address }}'
+    - '{{ inventory_hostname }}'
+    - '{{ ansible_fqdn }}'
+
+- name: Create Mysql schema
+  mysql_db:
+    name: '{{ PROFTPD_DB_NAME }}'
+    login_user: '{{ MYSQLUSER }}'
+    login_password: '{{ MYSQLPWD }}'
+    login_host: '{{ PROFTPD_DB_HOST }}'
+    state: import
+    target: /tmp/db_structure.sql
+
+- name: change permisions to rsa key
+  file:
+    path: /etc/ssh/ssh_host_rsa_key
+    mode: 0600
+
+- name: Set global config
+  template:
+    src: 'config/proftpd.conf.j2'
+    dest: '/etc/proftpd.conf'
+  notify: restart proftpd
+
+- name: Ensure config directories exists
+  file:
+    path: '{{ item }}'
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - /etc/proftpd/
+    - /etc/proftpd/skel/
+
+#TODO skel for users
+
+- name: Set special configs
+  template:
+    src: 'config/{{ item }}.conf.j2'
+    dest: '/etc/proftpd/{{ item }}.conf'
+  with_items:
+    - sftp
+    - sql
+    #- tls
+    #- modules
+    #- virtuals
+  notify: restart proftpd
+
+- name: Set special configs for logrotate
+  template:
+    src: 'config/logrotate_proftpd.j2'
+    dest: '/etc/logrotate.d/proftpd'
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Open port {{PROFTPD_SFTP_PORT}} on firewall
+  firewalld:
+    port: '{{ item }}'
+    permanent: true
+    state: enabled
+  notify: restart firewalld
+  with_items:
+   - '{{PROFTPD_SFTP_PORT}}/tcp'
+
+#TODO config for webUI
+#- name: Ensure home directories exist
+#  file:
+#    path: '{{ item.home }}'
+#    state: directory
+#    owner: '{{ item.uid | default(_proftpd_user.uid) }}'
+#    group: '{{ item.gid | default(_proftpd_group.gid) }}'
+#    mode: '{{ item.mode | default(omit) }}'
+#  when: item.home is defined and (item.state is not defined or item.state != 'absent')
+#  with_items: '{{ proftpd_users }}'
