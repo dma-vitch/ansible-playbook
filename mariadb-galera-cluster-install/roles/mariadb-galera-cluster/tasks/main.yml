@@ -1,0 +1,9 @@
+---
+- block:
+  - include: redhat_package.yml
+  - include: redhat_configure.yml
+  when: ansible_os_family == "RedHat"
+- include: configure_root_access.yml
+- include: bootstrap_galera.yml
+#TODO добавить пользователей и настройки
+#- include: mariadb_users.yml

@@ -1,0 +1,116 @@
+---
+- name: bootstrap_cluster | checking if galera cluster setup
+  stat:
+    path: "/etc/galera_cluster_configured"
+  register: "galera_cluster_configured"
+
+- name: bootstrap_cluster | create MariaDB log dir
+  file:
+    path: '/var/log/mariadb'
+    state: directory
+    mode: 0755
+    owner: 'mysql'
+    group: 'mysql'
+
+- block:
+  - name: bootstrap_cluster | configuring db server
+      template:
+        src: "{{ item }}.j2"
+        dest: "/etc/my.cnf"
+      become: true
+      register: "_mariadb_galera_cluster_reconfigured_1"
+      with_items:
+        - 'etc/my.cnf'
+
+  - name: bootstrap_cluster | configuring galera
+    template:
+      src: "{{ item }}.j2"
+      dest: "/etc/my.cnf.d/server.cnf"
+    become: true
+    register: "_mariadb_galera_cluster_reconfigured_1"
+    with_items:
+      - 'etc/my.cnf.d/server.cnf'
+
+  - name: bootstrap_cluster | stopping MariaDB
+    service:
+      name: "mariadb"
+      state: "stopped"
+    become: true
+    when: not galera_cluster_configured.stat.exists
+
+ # - name: bootstrap_cluster | configuring temp galera config
+ #   template:
+ #     src: "etc/my.cnf.d/temp.server.cnf.j2"
+ #     dest: "/etc/my.cnf.d/server.cnf"
+ #   become: true
+ #   when: >
+ #         not galera_cluster_configured.stat.exists and
+ #         inventory_hostname == galera_mysql_master_node
+
+  - name: bootstrap_cluster | first MariaDB Galera cluster node
+    command: galera_new_cluster
+    when: >
+          not galera_cluster_configured.stat.exists and
+          inventory_hostname == galera_mysql_master_node
+
+  - name: bootstrap_cluster | joining galera cluster
+    service:
+      name: "mariadb"
+      state: "restarted"
+    become: true
+    when: >
+          not galera_cluster_configured.stat.exists and
+          inventory_hostname != galera_mysql_master_node
+
+  when: ansible_os_family == "RedHat"
+
+- name: bootstrap_cluster | marking galera cluster as configured
+  file:
+    path: "/etc/galera_cluster_configured"
+    state: "touch"
+  become: true
+  when: not galera_cluster_configured.stat.exists
+
+- name: bootstrap_cluster | Restarting MySQL (Master)
+  service:
+    name: "mariadb"
+    state: "restarted"
+  become: true
+  register: "_mariadb_galera_cluster_master_restarted"
+  when: >
+        (galera_cluster_configured['stat']['exists'] and
+        inventory_hostname == galera_mysql_master_node) 
+#and
+#        _mariadb_galera_cluster_reconfigured_1['changed'])
+#        or _mariadb_galera_cluster_reconfigured_2['changed'])
+
+- name: bootstrap_cluster | waiting for MariaDB (Master)
+  wait_for:
+    port: "{{ mariadb_mysql_port }}"
+    host: "{{ galera_cluster_bind_address }}"
+  when: >
+        inventory_hostname == galera_mysql_master_node and
+        _mariadb_galera_cluster_master_restarted['changed']
+
+#TODO разобраться как переделать чтобы вернуть мастера на первую ноду
+# Only restart if cluster has already been configured
+#- name: bootstrap_cluster | restarting MariaDB (Non-Master)
+#  service:
+#    name: "mariadb"
+#    state: "restarted"
+#  become: true
+#  register: "_mariadb_galera_cluster_non_master_restarted"
+#  when: >
+#        (galera_cluster_configured['stat']['exists'] and
+#        inventory_hostname != galera_mysql_master_node)
+##and
+##        _mariadb_galera_cluster_reconfigured_1['changed'])
+#
+#- name: bootstrap_cluster | waiting For MariaDB (Non-Master)
+#  wait_for:
+#    port: "{{ mariadb_mysql_port }}"
+#    host: "{{ galera_cluster_bind_address }}"
+#  when: >
+#        inventory_hostname != galera_mysql_master_node and
+#        _mariadb_galera_cluster_non_master_restarted['changed']
+

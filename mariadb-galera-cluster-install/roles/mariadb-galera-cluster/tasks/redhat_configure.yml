@@ -1,0 +1,71 @@
+---
+
+- block:
+  - name: Start and enable firewalld
+    service:
+      name: firewalld
+      state: started
+      enabled: yes
+
+#  - name: Open firewall for external access to MySQL
+#    firewalld:
+#      service: mysql
+#      permanent: true
+#      immediate: true
+#      state: enabled
+
+  - name: Open Galera ports on firewall
+    firewalld:
+      port: '{{ item }}'
+      permanent: true
+      immediate: true
+      state: enabled
+    with_items:
+      - '{{ mariadb_mysql_port }}/tcp'
+
+  - name: Open Galera ports on firewall
+    firewalld:
+      pord: '{{ item }}'
+      permanent: true
+      immediate: true
+      state: enabled
+    with_items:
+      - 4444/tcp
+      - 4567/tcp
+      - 4568/tcp
+  when: firewall_enabled|default(false)|bool
+
+- block:
+  - name: pre-reqs selinux
+    dnf:
+      name: "{{ item }}"
+      state: present
+    with_items:
+      - libselinux-python
+    when: >
+          (ansible_os_family == "RedHat" and
+          ansible_distribution == "Fedora")
+
+  - name: pre-reqs
+    yum:
+      name: "{{ item }}"
+      state: present
+    with_items:
+      - libselinux-python
+    when: >
+          (ansible_os_family == "RedHat" and
+          ansible_distribution != "Fedora")
+
+  - name: Disable SELinux
+    selinux:
+      policy: targeted
+      state: permissive
+  when: selinux_disabled|default(true)|bool
+
+- name: redhat | ensuring mariadb mysql is enabled on boot and started
+  service:
+    name: "mariadb"
+    state: "started"
+    enabled: yes
+  become: true
+

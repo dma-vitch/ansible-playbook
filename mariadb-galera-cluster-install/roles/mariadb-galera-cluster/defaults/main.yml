@@ -1,0 +1,90 @@
+---
+# Define if firewall needs on host
+firewall_enabled: false
+# Define if selinux needs on host
+selinux_disabled: false
+
+# Mariadb repo setting
+#mariadb_redhat_repo: 'http://yum.mariadb.org/{{ mariadb_version }}/centos{{ ansible_distribution_major_version| int }}-amd64'
+mariadb_redhat_repo: 'http://192.168.132.23/mariadb/10.1'
+mariadb_redhat_repo_key: 'https://yum.mariadb.org/RPM-GPG-KEY-MariaDB'
+mariadb_version: '10.1'
+
+#{{ ansible_distribution|lower }}{{ ansible_distribution_major_version| int }}-amd64'
+
+# Mariadb setting
+# # Define mysql root password
+# generate using echo mkpasswd -l10 -C 5
+mariadb_mysql_root_password: MariadbAdmin1
+# Define listen port
+mariadb_mysql_port: 3306
+# Define data dir
+mariadb_mysql_data_dir: '/var/lib/mysql'
+
+mariadb_mem_multiplier: .20
+
+mariadb_mysql_settings:
+  collation_server: 'latin1_swedish_ci'
+  character_set_client: 'latin1'
+  expire_logs_days: 10
+  # ON|OFF
+  innodb_buffer_pool_size: 128M
+  innodb_doublewrite: 'ON'
+  innodb_flush_log_at_timeout: 1
+  innodb_read_io_threads: 4
+  innodb_write_io_threads: 4
+  join_buffer_size: 1M
+  #Default is 16M
+  key_buffer_size: '{{ (ansible_memtotal_mb | int * mariadb_mem_multiplier) | round | int }}M'
+  max_allowed_packet: 16M
+  max_binlog_size: 100M
+  max_connections: 150
+  max_heap_table_size: 16M
+  query_cache_limit: 1M
+  query_cache_size: 16M
+  thread_cache_size: 8
+  thread_stack: 192K
+  tmp_table_size: 16M
+
+# Define additional MySQL users
+mariadb_mysql_users: []
+#   - name: example
+#     hosts:
+#       - "%"
+#       - "127.0.0.1"
+#       - "::1"
+#       - "localhost"
+#     password: secret
+#     encrypted: no (default)
+#     priv: *.*:USAGE (default}
+#     state: present (default)
+#     append_privs: no (default)
+
+# galera setting
+# Define the name of the cluster
+galera_cluster_name: 'sorm-test'
+
+# Define the name of the cluster
+galera_allow_root_from_any: false
+
+# Defines the which node should be considered the master in the cluster
+# Used to bootstrap cluster
+galera_mysql_master_node: "{{ groups['galera_cluster'][0] }}"
+
+# Define interface in which to bind
+# ex. eth0|eth1|enp0s3|enp0s8
+galera_cluster_bind_interface: 'eth0'
+
+# Define bind address for galera cluster
+galera_cluster_bind_address: "{{ hostvars[inventory_hostname]['ansible_' + galera_cluster_bind_interface]['ipv4']['address'] }}"
+
+#galera_wsrep_node_address: '{{ galera_cluster_bind_address }}:{{ galera_wsrep_node_address_port }}'
+#wsrep_node_name='{{ ansible_hostname }}-{{ ansible_default_ipv4.address }}'
+
+galera_enable_replicate_user: false
+galera_wsrep_replicate_user: replicator
+galera_wsrep_replicate_user_pass: Replicator1
+#wsrep_sst_auth=repl_user:PASS
+galera_wsrep_node_address_port: 4567
+galera_wsrep_node_address: '{{ galera_cluster_bind_address }}:{{ galera_wsrep_node_address_port }}'
+galera_enable_galera_monitoring_script: false

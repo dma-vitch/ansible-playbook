@@ -1,0 +1,50 @@
+---
+- block:
+  - name: redhat | adding mariadb repo
+    template:
+      src: "etc/yum.repos.d/MariaDB.repo.j2"
+      dest: "/etc/yum.repos.d/MariaDB.repo"
+      owner: "root"
+      group: "root"
+    become: true
+    register: repo_added
+
+  - name: redhat | installing pre-reqs
+    yum:
+      name: "{{ item }}"
+      state: "present"
+      update_cache: yes
+    become: true
+    with_items:
+      - 'MySQL-python'
+      - 'rsync'
+      - 'socat'
+    when: >
+          ansible_distribution != "Fedora"
+
+  - name: redhat | installing mariadb mysql
+    yum:
+      name: "{{ item }}"
+      state: "present"
+    become: true
+    with_items:
+      - 'MariaDB-server'
+      - 'MariaDB-client'
+      - 'MariaDB-compat'
+      - 'galera'
+    when: >
+          ansible_distribution != "Fedora"
+
+  - name: redhat | installing mariadb mysql
+    dnf:
+      name: "{{ item }}"
+      state: present
+    become: true
+    with_items:
+      - 'MariaDB-server'
+      - 'galera'
+      - 'MySQL-python'
+    when: >
+          ansible_distribution == "Fedora"
+  when: ansible_os_family == "RedHat"
+

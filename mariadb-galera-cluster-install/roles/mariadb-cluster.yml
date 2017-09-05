@@ -1,0 +1,12 @@
+---
+# This playbook deploys the hue server.
+
+- name: apply common configuration to all nodes
+  #hosts: nfs-server
+  hosts: galera_cluster
+  remote_user: sudo
+  become: yes
+  become_method: sudo
+
+  roles:
+    - mariadb-galera-cluster

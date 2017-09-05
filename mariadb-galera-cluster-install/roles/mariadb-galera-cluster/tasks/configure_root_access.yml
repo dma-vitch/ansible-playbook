@@ -1,0 +1,68 @@
+---
+- name: configure_root_access | generate root password
+  shell: < /dev/urandom tr -dc 'A-Za-z0-9!@#$%^&*()-_=+?;:' | head -c10 | awk '{print $1}'
+  run_once: true
+  register: gen_mariadb_mysql_root_password
+  when: mariadb_mysql_root_password is not defined
+
+# This command will fail when the root password was set previously
+- name: configure_root_access | check if root password is set
+  shell: >
+    mysqladmin -u root status
+  changed_when: false
+  failed_when: false
+  register: root_pwd_check
+#  tags: root_password_set
+
+- name: configure_root_access | set MariaDB root password for the first time
+  mysql_user:
+    name: root
+    password: "{{ mariadb_mysql_root_password|default( gen_mariadb_mysql_root_password.stdout )}}"
+    host_all: yes
+    state: present
+  when: root_pwd_check.rc == 0
+#  tags: root_password_set
+
+- name: configure_root_access | configuring root my.cnf
+  template:
+    src: "root/my.cnf.j2"
+    dest: "/root/.my.cnf"
+    owner: "root"
+    group: "root"
+    mode: "u=rw,g=,o="
+  become: true
+  when: ansible_os_family == "RedHat"
+
+- name: configure_root_access | updating root passwords
+  mysql_user:
+    name: root
+    host: "{{ item }}"
+    password: "{{ mariadb_mysql_root_password|default( gen_mariadb_mysql_root_password.stdout )}}"
+  become: true
+  with_items:
+    - '{{ ansible_hostname }}'
+    - '127.0.0.1'
+    - '::1'
+    - localhost
+
+- name: configure_root_access | updating root passwords (allow from anywhere)
+  mysql_user:
+    name: root
+    host: "{{ item }}"
+    password: "{{ mariadb_mysql_root_password|default( gen_mariadb_mysql_root_password.stdout )}}"
+    priv: "*.*:ALL,GRANT"
+  become: true
+  with_items:
+    - '%'
+  when: galera_allow_root_from_any|bool
+
+- name: create tech user connect from all host
+  mysql_user:
+#    check_implicit_admin: yes
+    login_user: "root"
+    login_password: "{{ mariadb_mysql_root_password|default( gen_mariadb_mysql_root_password.stdout )}}"
+    name: '{{ galera_wsrep_replicate_user }}'
+    password: '{{ galera_wsrep_replicate_user_pass }}'
+    host: "%"
+    priv: '*.*:ALL,GRANT'
+  when: galera_enable_replicate_user|bool
