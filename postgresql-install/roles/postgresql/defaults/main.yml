@@ -1,0 +1,89 @@
+---
+# Basic settings
+postgresql_version: 9.6
+postgresql_encoding: 'UTF-8'
+
+postgresql_locale_parts:
+  - 'en_US' # Locale
+  - 'UTF-8' # Encoding
+postgresql_locale: "{{ postgresql_locale_parts | join('.') }}"
+postgresql_ctype_parts:
+  - 'en_US' # Locale
+  - 'UTF-8' # Encoding
+postgresql_ctype: "{{ postgresql_ctype_parts | join('.') }}"
+
+postgresql_env:
+  LC_ALL: "{{ postgresql_locale }}"
+  LC_LCTYPE: "{{ postgresql_locale }}"
+
+# The user/group that will run postgresql process
+postgresql_user: postgres
+postgresql_group: postgres
+
+postgresql_listen_addresses:
+  - localhost
+
+postgresql_server_port: 5432
+
+postgresql_default_auth_method: "trust"
+
+# Host based authentication (hba) entries to be added to the pg_hba.conf. This
+# variable's defaults reflect the defaults that come with a fresh installation.
+postgresql_pg_hba_entries_default:
+  - { type: local, database: all, user: postgres, auth_method: peer, }
+  - { type: local, database: all, user: all, auth_method: "{{ postgresql_default_auth_method }}", comment: '"local" is for Unix domain socket connections only' }
+  - { type: host, database: all, user: all, address: '127.0.0.1/32', auth_method: md5, comment: 'IPv4 local connections:' }
+  - { type: host, database: all, user: all, address: '::1/128', auth_method: "{{ postgresql_default_auth_method }}", comment: 'IPv6 local connections:' }
+
+postgresql_pg_hba_custom: []
+
+# daemon name of the PostgreSQL
+postgresql_daemon: "postgresql-{{ postgresql_version }}"
+
+# List of databases to be created (optional)
+postgresql_databases: []
+
+# List of database extensions to be created (optional)
+postgresql_database_extensions: []
+
+# List of users to be created (optional)
+postgresql_users: []
+
+# List of user privileges to be applied (optional)
+postgresql_user_privileges: []
+
+# Yum settings
+postgresql_pgdg_dists:
+  RedHat: redhat
+  CentOS: centos
+  OracleLinux: oraclelinux
+postgresql_pgdg_releases:
+  redhat: {
+      9.1: 8,
+      9.2: 9,
+      9.3: 3,
+      9.4: 3,
+      9.5: 3,
+      9.6: 3,
+  }
+  centos: {
+      9.1: 7,
+      9.2: 8,
+      9.3: 3,
+      9.4: 3,
+      9.5: 3,
+      9.6: 3,
+  }
+  oraclelinux: {
+      9.1: 8,
+      9.2: 9,
+      9.3: 3,
+      9.4: 3,
+      9.5: 3,
+      9.6: 3,
+  }
+
+postgresql_version_terse: "{{ postgresql_version | replace('.', '') }}"
+postgresql_yum_repository_base_url: "http://yum.postgresql.org"
+postgresql_yum_repository_url: "{{ postgresql_yum_repository_base_url }}/{{ postgresql_version }}/{{ ansible_os_family | lower }}/rhel-{{ ansible_distribution_major_version }}-{{ ansible_architecture }}/pgdg-{{ postgresql_pgdg_dists[ansible_distribution] }}{{ postgresql_version_terse }}-{{ postgresql_version }}-{{ postgresql_pgdg_releases.get(postgresql_pgdg_dists[ansible_distribution]).get(postgresql_version) }}.noarch.rpm"
+

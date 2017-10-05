@@ -1,0 +1,16 @@
+---
+
+- name: priv | Update the user privileges
+  postgresql_user:
+    name: "{{item.name}}"
+    db: "{{item.db | default(omit)}}"
+    port: "{{item.port | default(postgresql_server_port)}}"
+    priv: "{{item.priv | default(omit)}}"
+    state: present
+    login_host: "{{item.host | default('localhost')}}"
+    login_user: "{{postgresql_user}}"
+    role_attr_flags: "{{item.role_attr_flags | default(omit)}}"
+  become: yes
+  become_user: "{{postgresql_user}}"
+  with_items: "{{postgresql_user_privileges}}"
+#  when: postgresql_users|length > 0

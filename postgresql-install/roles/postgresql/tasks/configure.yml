@@ -1,0 +1,48 @@
+---
+- name: configure | Ensure PostgreSQL unix socket dirs exist.
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ postgresql_user }}"
+    group: "{{ postgresql_group }}"
+    mode: 02775
+  with_items: "{{ postgresql_unix_socket_directories }}"
+
+- name: configure | Configure global settings.
+  lineinfile:
+    dest: "{{ postgresql_data_directory }}/postgresql.conf"
+    regexp: "^#?{{ item.option }}.+$"
+    line: "{{ item.option }} = '{{ item.value }}'"
+    state: "{{ item.state | default('present') }}"
+  with_items: "{{ postgresql_global_config_options }}"
+  notify: restart postgresql
+
+- name: configure | Configure host based authentication (if entries are configured).
+  template:
+    src: "pg_hba.conf.j2"
+    dest: "{{ postgresql_data_directory }}/pg_hba.conf"
+    owner: "{{ postgresql_user }}"
+    group: "{{ postgresql_group }}"
+    mode: 0600
+  notify: restart postgresql
+  when: postgresql_pg_hba_entries_default or postgresql_pg_hba_custom
+
+- name: configure | Ensure the systemd directory for PostgreSQL exists | RedHat
+  file:
+    name: "/etc/systemd/system/postgresql-{{ postgresql_version }}.service.d"
+    state: directory
+    mode: 0755
+
+# See https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/system_administrators_guide/sect-managing_services_with_systemd-unit_files
+- name: configure | Use the conf directory when starting the Postgres service | RedHat
+  template:
+    src: postgresql_systemd_service_custom.conf.j2
+    dest: "/etc/systemd/system/postgresql-{{ postgresql_version }}.service.d/custom.conf"
+  register: postgresql_systemd_custom_conf
+
+- name: configure | Enable PostgreSQL service
+  service:
+    name: "{{ postgresql_daemon }}"
+    enabled: yes
+#  when: postgresql_service_enabled
+  notify: restart postgresql

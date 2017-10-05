@@ -1,0 +1,44 @@
+---
+- block:
+  - name: configure | Start and enable firewalld
+    service:
+      name: firewalld
+      state: started
+      enabled: yes
+
+  - name: configure | Open Postgres ports on firewall
+    firewalld:
+      port: '{{ item }}'
+      permanent: true
+      immediate: true
+      state: enabled
+    with_items:
+      - '{{ postgresql_server_port }}/tcp'
+  when: firewall_enabled|default(false)|bool
+
+- block:
+  - name: configure | pre-reqs selinux
+    dnf:
+      name: '{{ item }}'
+      state: present
+    with_items:
+      - libselinux-python
+    when: >
+          (ansible_os_family == "RedHat" and
+          ansible_distribution == "Fedora")
+
+  - name: configure | pre-reqs
+    yum:
+      name: '{{ item }}'
+      state: present
+    with_items:
+      - libselinux-python
+    when: >
+          (ansible_os_family == "RedHat" and
+          ansible_distribution != "Fedora")
+
+  - name: configure | Disable SELinux
+    selinux:
+      policy: targeted
+      state: permissive
+  when: selinux_disabled|default(true)|bool

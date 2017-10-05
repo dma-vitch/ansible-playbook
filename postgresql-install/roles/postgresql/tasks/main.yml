@@ -1,0 +1,33 @@
+---
+#main task
+- include: package.yml
+  tags:
+    - install
+
+- include: init.yml
+  tags:
+    - init
+
+- include: configure.yml
+  tags:
+    - configuration
+
+- include: security.yml
+  tags:
+    - security
+    - configuration
+
+- include: users.yml
+  when: postgresql_users|length > 0
+  tags:
+    - user
+
+- include: databases.yml
+  when: postgresql_databases|length > 0
+  tags:
+    - db
+
+- include: users_priv.yml
+  when: postgresql_user_privileges|length > 0
+  tags:
+    - priv

@@ -1,0 +1,37 @@
+---
+- name: database | Ensure PostgreSQL is running
+  service:
+    name: "{{ postgresql_daemon }}"
+    state: started
+
+- name: database | Ensure PostgreSQL databases are present.
+  postgresql_db:
+    name: "{{ item.name }}"
+    lc_collate: "{{ item.lc_collate | default(postgresql_locale) }}"
+    lc_ctype: "{{ item.lc_ctype | default(postgresql_ctype) }}"
+    encoding: "{{ item.encoding | default(postgresql_encoding) }}"
+    template: "{{ item.template | default('template0') }}"
+    login_host: "{{ item.login_host | default('localhost') }}"
+    login_password: "{{ item.login_password | default(omit) }}"
+    login_user: "{{ item.login_user | default(postgresql_user) }}"
+    login_unix_socket: "{{ item.login_unix_socket | default(postgresql_unix_socket_directories[0]) }}"
+    port: "{{ item.port | default(postgresql_server_port) }}"
+    owner: "{{ item.owner | default(postgresql_user) }}"
+    state: "{{ item.state | default('present') }}"
+  with_items: "{{ postgresql_databases }}"
+  become: yes
+  become_user: "{{ postgresql_user }}"
+  # See: https://github.com/ansible/ansible/issues/16048#issuecomment-229012509
+  vars:
+    ansible_ssh_pipelining: true
+  when: postgresql_databases|length > 0
+
+- name: databases | Add extensions to the databases
+  command: "psql {{item.0.db}} --username {{postgresql_user}} -c 'CREATE EXTENSION IF NOT EXISTS {{ item.1 }};'"
+  become: yes
+  become_user: "{{postgresql_user}}"
+  with_subelements:
+    - "{{postgresql_database_extensions}}"
+    - extensions
+  register: result
+  changed_when: "'NOTICE' not in result.stderr"

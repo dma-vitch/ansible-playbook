@@ -1,0 +1,54 @@
+---
+# Define if firewall needs on host
+firewall_enabled: yes
+# Define if selinux needs on host
+selinux_disabled: yes
+
+# Used to execute initdb
+postgresql_bin_directory: "/usr/pgsql-{{postgresql_version}}/bin"
+
+postgresql_data_directory: "/opt/data"
+postgresql_unix_socket_directories:
+  - /var/run/postgresql
+  - /tmp
+
+# Global configuration options that will be set in postgresql.conf.
+postgresql_global_config_options:
+  - option: unix_socket_directories
+    value: '{{ postgresql_unix_socket_directories | join(",") }}'
+  - option: port
+    value: "{{ postgresql_server_port }}"
+  - option: listen_addresses
+    value: '{{ postgresql_listen_addresses | join(",") }}'
+  - option: max_connections
+    value: '100'
+
+# Host based authentication (hba) additional entries to be added to the pg_hba.conf.
+postgresql_pg_hba_custom:
+  - { type: host, database: all, user: tech, address: '127.0.0.1/32', auth_method: md5, comment: 'Test user' }
+
+# See: http://docs.ansible.com/ansible/latest/postgresql_user_module.html
+postgresql_users:
+  - name: tech
+    password: tech
+
+# See: http://docs.ansible.com/ansible/latest/postgresql_db_module.html
+postgresql_databases:
+  - name: exampledb
+    login_host: localhost
+    port: 5432
+    owner: tech
+
+# See: http://docs.ansible.com/ansible/latest/postgresql_user_module.html
+# if you want change priv for users use this options instead of postgresql_users
+postgresql_user_privileges:
+  - name: tech
+    db: exampledb
+    priv: "ALL"
+#    role_attr_flags: "CREATEDB" # role attribute flags
+
+# Add needed db extensions to wanted PostgreSQL DB
+postgresql_database_extensions:
+  - db: exampledb
+    extensions:
+      - dblink
