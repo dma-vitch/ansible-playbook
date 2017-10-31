@@ -1,0 +1,27 @@
+---
+# default for ansible role
+
+timestamp: "{{ ansible_date_time.date }}"
+
+ambari_version: 2.5.2.0
+
+ambari_repo_yum:
+  - name: ambari
+    description: Ambari Version - ambari-{{ ambari_version }}
+    baseurl: http://public-repo-1.hortonworks.com/ambari/centos{{ ansible_distribution_major_version }}/2.x/updates/{{ ambari_version }}
+    gpgcheck: 0
+    gpgkey: http://public-repo-1.hortonworks.com/ambari/centos{{ ansible_distribution_major_version }}/2.x/updates/{{ ambari_version }}/RPM-GPG-KEY/RPM-GPG-KEY-Jenkins
+    state: present
+    priority: 1
+
+ambari_backup_dir: /tmp/ambari_bkp
+
+ambari_dump_databases:
+  - ambari
+
+ambari_db_connection:
+  user: "ambari"
+  password: "bigdata"
+  host: "localhost"
+
+ambari_cluster_name: HDP_CLUSTER

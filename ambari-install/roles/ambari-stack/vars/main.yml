@@ -1,0 +1,8 @@
+---
+# ambari setting override defaults settings
+
+#ambari_user:
+#ambari_passwd:
+#ambari_server:
+#ambari_cluster_name:
+#ambari_server_port:

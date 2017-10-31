@@ -1,0 +1,12 @@
+---
+# This playbook deploys the ambari server and agents.
+
+- name: apply common configuration to all nodes
+  hosts: ambari_nodes
+  remote_user: vitch
+  become: yes
+  become_user: root
+  become_method: sudo
+
+  roles:
+    - ambari-stack

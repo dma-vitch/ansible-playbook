@@ -1,0 +1,36 @@
+---
+# tasks file for ambari-agent
+
+- name: "Ambari-Agent | Determine if ambari-agent is installed"
+  yum:
+    list: ambari-agent
+  register: ambari_agent_installed
+
+- name: "Ambari-Agent | Stopping Ambari Agent"
+  command: ambari-agent stop
+  when: ambari_agent_installed.results| selectattr('yumstate', 'match', 'installed') | list| length != 0
+
+- name: "Ambari-Agent | Ensure required packages are installed"
+  yum:
+    name: "{{ item }}"
+    update_cache: yes
+    state: latest
+  with_items:
+    - ambari-agent
+
+- name: "Ambari-Agent | Configure the Ambari agent"
+  lineinfile:
+    dest: /etc/ambari-agent/conf/ambari-agent.ini
+    regexp: '^hostname=.*$'
+    #line: "hostname={{ hostvars[groups['ambari-nodes'][0]]['ansible_fqdn'] }}"
+    line: "hostname={{ hostvars[groups['ambari-nodes'][0]]['inventory_hostname'] }}"
+    state: present
+  when: ambari_agent_installed.results| selectattr('yumstate', 'match', 'installed')| list| length == 0
+
+- name: "Ambari-Agent | Make sure ambari-agent is running"
+  command: ambari-agent start
+
+- name: "Ambari-Agent | Make sure ambari-agent is autostart"
+  service:
+    name: ambari-agent
+    enabled: yes

@@ -1,0 +1,132 @@
+---
+
+- name: "Ambari-Server | Determine if ambari-server is installed"
+  yum:
+    list: ambari-server
+  register: ambari_installed
+  when: inventory_hostname == groups['ambari-nodes'][0]
+  tags:
+    - ambari-backup
+
+- name: "Ambari-Server | Determine if ambari-agent is installed"
+  yum:
+    list: ambari-agent
+  register: ambari_agent_installed
+  when: inventory_hostname == groups['ambari-nodes'][0]
+
+- block:
+  - name: "Ambari-Server | Upgrade ambari-agent"
+    yum:
+      name: ambari-agent
+      state: latest
+    register: ambari_agent_updated
+
+  - name: "Ambari-Server | Stoping ambari-agent"
+    command: ambari-agent stop
+
+  when:
+    - inventory_hostname == groups['ambari-nodes'][0]
+    - ambari_agent_installed.results| selectattr('yumstate', 'match', 'installed') | list|length != 0
+
+- block:
+  - name: "Ambari-Server | Stoping Ambari Server"
+    shell: ambari-server stop
+
+  - name: "Ambari-Server | Wait for Ambari Server is down"
+    wait_for:
+      host: 127.0.0.1
+      port: 8080
+      delay: 10
+      state: stopped
+
+  - name: "Ambari-Server | Ensure backup dir is present"
+    file:
+      path: "{{ ambari_backup_dir }}"
+      state: directory
+      mode: 0777
+    tags:
+      - ambari-backup
+
+  - name: "Ambari-Server | Backup config property"
+    copy:
+      src: /etc/ambari-server/conf/ambari.properties
+      dest: "{{ambari_backup_dir}}/ambari.properties"
+      remote_src: yes
+    tags:
+      - ambari-backup
+
+  - name: "Ambari-Server | Backup database Ambari"
+    shell: /usr/bin/pg_dump -h {{ ambari_db_connection.host }} -U {{ ambari_db_connection.user }} -Fc -Z9 -f {{ ambari_backup_dir }}/{{ item }}-{{ timestamp }}.backup {{ item }}
+    environment:
+      PGPASSWORD: "{{ ambari_db_connection.password }}"
+    with_items: "{{ ambari_dump_databases }}"
+    tags:
+      - ambari-backup
+
+  - debug: msg="Backup saved to {{ ambari_backup_dir }}/"
+    tags:
+      - ambari-backup
+
+  when:
+    - inventory_hostname == groups['ambari-nodes'][0]
+    - ambari_installed.results| selectattr('yumstate', 'match', 'installed') | list|length != 0
+
+- name: "Ambari-Server | Install packages ambari-server"
+  yum:
+    name: "{{ item }}"
+    update_cache: yes
+    state: latest
+  with_items:
+    - ambari-server
+  when: inventory_hostname == groups['ambari-nodes'][0]
+
+- name: "Ambari-Server | Upgrade Ambari Server package"
+  shell: ambari-server upgrade -s
+  register: ambari_server_upgrade
+  when:
+    - inventory_hostname == groups['ambari-nodes'][0]
+    - ambari_installed.results| selectattr('yumstate', 'match', 'installed') | list|length != 0
+
+#TODO add other options to ambari install
+- name: "Ambari-Server | Configure ambari-server"
+  shell: ambari-server setup -j {{ java_home }} -s > /tmp/ambari-install-output
+  args:
+    executable: /bin/bash
+    creates: /etc/ambari.done
+  environment:
+    JAVA_HOME: "{{ java_home }}"
+  #when:
+  #  - inventory_hostname == groups['ambari-nodes'][0]
+  #  - ambari_installed.results| selectattr('yumstate', 'match', 'installed') | list|length == 0
+
+- name: "Ambari-Server | Check if ambari-server is installed"
+  wait_for:
+    path: /tmp/ambari-install-output
+    search_regex: "completed successfully"
+  register: ambari_server_installed
+  when:
+    - inventory_hostname == groups['ambari-nodes'][0]
+    - ambari_installed.results| selectattr('yumstate', 'match', 'installed') | list|length == 0
+
+- name: "Ambari-Server | Mark ambari-server is installed"
+  file:
+    path: /etc/ambari.done
+    state: touch
+  when: inventory_hostname == groups['ambari-nodes'][0] and (ambari_server_installed.rc == 0 or ambari_server_upgrade.rc == 0)
+
+- name: "Ambari-Server | Make sure ambari-server is running"
+  command: ambari-server start
+  when: inventory_hostname == groups['ambari-nodes'][0]
+
+- name: "Ambari-Server | Make sure ambari-server is autostart"
+  service:
+    name: ambari-server
+    enabled: yes
+  when: inventory_hostname == groups['ambari-nodes'][0]
+
+- name: "Ambari-Server | Check if ambari-server is up"
+  wait_for:
+    host: 127.0.0.1
+    port: 8080
+    delay: 10
+  when: inventory_hostname == groups['ambari-nodes'][0]
